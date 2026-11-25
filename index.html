@@ -53,22 +53,44 @@
 
     (function () {
       var buildUrl = "Build";
+
+      // Very large canvases can run slowly in the browser. The game is drawn at most this many pixels wide
+      // and the browser scales it up to fill the window. Raise it for sharper visuals, lower it for speed.
+      var MAX_RENDER_WIDTH = 1920;
+      function renderScale() {
+        var dpr = window.devicePixelRatio || 1;
+        var cssW = document.body.classList.contains("letterbox")
+          ? Math.min(window.innerWidth, window.innerHeight * 16 / 9) : window.innerWidth;
+        return Math.max(0.5, Math.min(dpr, MAX_RENDER_WIDTH / cssW));
+      }
       var loaderUrl = buildUrl + "/Site Porto Build.loader.js";
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/Site Porto Build.data.br",
-        frameworkUrl: buildUrl + "/Site Porto Build.framework.js.br",
-        codeUrl: buildUrl + "/Site Porto Build.wasm.br",
+        dataUrl: buildUrl + "/Site Porto Build.data.unityweb",
+        frameworkUrl: buildUrl + "/Site Porto Build.framework.js.unityweb",
+        codeUrl: buildUrl + "/Site Porto Build.wasm.unityweb",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "Website Portfolio",
         productVersion: "0.1.0",
-        // On very high-resolution screens, uncomment to render at 1x for better frame rates:
-        // devicePixelRatio: 1,
+        devicePixelRatio: renderScale(),
         showBanner: showBanner
       };
 
       var canvas = document.getElementById("unity-canvas");
+
+      // Add #fps to the page address (for example .../site-portfolio/#fps) to show a frame-rate counter.
+      if (location.hash === "#fps") {
+        var box = document.createElement("div");
+        box.style.cssText = "position:fixed;left:8px;top:8px;z-index:99;padding:4px 8px;background:rgba(0,0,0,.65);color:#fff;font:12px monospace;pointer-events:none";
+        document.body.appendChild(box);
+        var frames = 0, t0 = performance.now();
+        (function tick(t) {
+          frames++;
+          if (t - t0 >= 500) { box.textContent = Math.round(frames * 1000 / (t - t0)) + " fps  " + canvas.width + "x" + canvas.height; frames = 0; t0 = t; }
+          requestAnimationFrame(tick);
+        })(t0);
+      }
       var camp = document.getElementById("camp");
       var fire = document.getElementById("fire");
       var percent = document.getElementById("percent");
