@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Website Portfolio</title>
+  <link rel="stylesheet" href="TemplateData/style.css">
+</head>
+<body class="letterbox">
+  <!-- The game fills the whole window. It loads underneath the camp screen and is revealed the moment it is ready. -->
+  <canvas id="unity-canvas" tabindex="-1"></canvas>
+
+  <div id="camp" role="progressbar" aria-label="Loading the game" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <i class="pine" style="--x:3%;  --h:34vh; --d:0"></i>
+    <i class="pine" style="--x:13%; --h:24vh; --d:1"></i>
+    <i class="pine" style="--x:80%; --h:30vh; --d:1"></i>
+    <i class="pine" style="--x:90%; --h:38vh; --d:0"></i>
+    <i class="ground"></i>
+
+    <main class="stage">
+      <div class="plaque">
+        <img src="TemplateData/TitleBoard.png" alt="" draggable="false">
+        <h1>Robbie's Portfolio</h1>
+      </div>
+
+      <div class="fire-wrap" id="fire" aria-hidden="true">
+        <div class="fire">
+          <i class="flame outer"></i>
+          <i class="flame mid"></i>
+          <i class="flame core"></i>
+          <i class="log l1"></i>
+          <i class="log l2"></i>
+          <i class="stone s1"></i>
+          <i class="stone s2"></i>
+          <i class="stone s3"></i>
+        </div>
+      </div>
+
+      <p id="status" aria-live="polite">Lighting the campfire <span id="percent">0%</span></p>
+      <p id="tip">Tip: press R at a board to read it.</p>
+      <p id="detail" hidden></p>
+    </main>
+  </div>
+
+  <script>
+    // Unity calls this for warnings and errors. Keep them in the console instead of drawing a banner over the game.
+    var reportError = null;
+    function showBanner(msg, type) {
+      if (type === "error") { console.error(msg); if (reportError) reportError(msg); }
+      else console.warn(msg);
+    }
+
+    (function () {
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/Site Porto Build.loader.js";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/Site Porto Build.data.br",
+        frameworkUrl: buildUrl + "/Site Porto Build.framework.js.br",
+        codeUrl: buildUrl + "/Site Porto Build.wasm.br",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Website Portfolio",
+        productVersion: "0.1.0",
+        // On very high-resolution screens, uncomment to render at 1x for better frame rates:
+        // devicePixelRatio: 1,
+        showBanner: showBanner
+      };
+
+      var canvas = document.getElementById("unity-canvas");
+      var camp = document.getElementById("camp");
+      var fire = document.getElementById("fire");
+      var percent = document.getElementById("percent");
+      var status = document.getElementById("status");
+
+      var gotProgress = false;
+
+      function setProgress(p) {
+        p = Math.max(0, Math.min(1, p));
+        if (p > 0) { gotProgress = true; camp.classList.remove("unknown"); }
+        fire.style.setProperty("--p", p.toFixed(3));
+        percent.textContent = Math.round(p * 100) + "%";
+        camp.setAttribute("aria-valuenow", Math.round(p * 100));
+      }
+
+      function reveal() {
+        // wait two frames so the first game frame is on screen before the camp screen fades away
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            camp.classList.add("done");
+            canvas.focus();
+            setTimeout(function () { if (camp.parentNode) camp.parentNode.removeChild(camp); }, 900);
+          });
+        });
+      }
+
+      function fail(error, hint) {
+        if (!camp.parentNode || camp.classList.contains("done")) return;   // game already running
+        var text = String((error && error.message) || error || "Unknown error");
+        console.error(text);
+        clearTimeout(stallTimer);
+        camp.classList.remove("unknown");
+        camp.classList.add("failed");
+        camp.removeAttribute("aria-valuenow");
+        status.textContent = "The game couldn't start.";
+        document.getElementById("tip").textContent = hint ||
+          "Reload the page. If it keeps failing, try the latest Chrome, Edge or Firefox on a computer.";
+        var detail = document.getElementById("detail");
+        detail.textContent = text.length > 300 ? text.slice(0, 300) + "…" : text;
+        detail.hidden = false;
+      }
+      reportError = fail;
+
+      // Some servers compress without sending a file size, so the browser can't report progress until the end.
+      // If nothing has moved after a few seconds, stop showing a stuck "0%".
+      var stallTimer = setTimeout(function () {
+        if (!gotProgress) {
+          camp.classList.add("unknown");
+          fire.style.setProperty("--p", "0.6");
+          console.warn("No download progress reported yet. If the game never starts, check the Network tab for failed or very slow requests in the Build folder.");
+        }
+      }, 4000);
+
+      if (location.protocol === "file:") {
+        fail("This page was opened from a file.",
+             "Unity games can't run from a double-clicked index.html. Use File > Build And Run in Unity, or serve the build folder with a local web server.");
+        return;
+      }
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = function () {
+        createUnityInstance(canvas, config, setProgress).then(function (instance) {
+          window.unityInstance = instance;
+          setProgress(1);
+          reveal();
+        }).catch(fail);
+      };
+      script.onerror = function () { fail("Could not load " + loaderUrl, "The build files weren\u2019t found. Check that the Build folder was uploaded next to index.html."); };
+      document.body.appendChild(script);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+/* Camp loading screen for the Unity WebGL build.
+   To use the game's own font: drop the .ttf into TemplateData/, uncomment @font-face and keep the name. */
+/*
+@font-face { font-family: "GameFont"; src: url("GameFont.ttf"); font-display: block; }
+*/
+:root {
+  --font: "GameFont", "Baloo 2", "Trebuchet MS", "Verdana", sans-serif;
+  --sky-top: #5d4391;
+  --sky-mid: #9a5a9e;
+  --sky-low: #d9805f;
+  --sky-glow: #e89a55;
+  --ember: #b24a22;
+  --ember-dark: #8f3a1b;
+  /* Game aspect ratio used by the letterbox below (your editor Game view is about 16:9) */
+  --aw: 16; --ah: 9;
+  --pine-dark: #27402f;
+  --pine-lit: #345a43;
+}
+
+html, body { margin: 0; height: 100%; overflow: hidden; background: #120d1a; overscroll-behavior: none; touch-action: none; }
+
+#unity-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: #1b1424; outline: none; }
+
+/* Keep the game at the aspect ratio it was designed in, with dark bars around it, so the menu lines up with the scene
+   exactly like in the editor. To let the game fill any window shape instead, remove class="letterbox" from <body> in index.html. */
+body.letterbox #unity-canvas {
+  margin: auto;
+  width: min(100vw, calc(100vh * var(--aw) / var(--ah)));
+  height: min(100vh, calc(100vw * var(--ah) / var(--aw)));
+}
+
+/* ---------- camp screen ---------- */
+#camp {
+  position: fixed; inset: 0; z-index: 10; overflow: hidden;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 38%, var(--sky-low) 72%, var(--sky-glow) 100%);
+  font-family: var(--font);
+  transition: opacity .55s ease, visibility 0s linear .55s;
+}
+#camp.done { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.ground {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 30vh; background: var(--ember);
+  clip-path: polygon(0 28%, 18% 8%, 36% 22%, 58% 4%, 78% 20%, 100% 6%, 100% 100%, 0 100%);
+}
+.ground::after {
+  content: ""; position: absolute; inset: 0; background: var(--ember-dark);
+  clip-path: polygon(0 62%, 24% 40%, 40% 70%, 62% 38%, 84% 66%, 100% 48%, 100% 100%, 0 100%);
+}
+
+.pine {
+  position: absolute; left: var(--x); bottom: 14vh; width: calc(var(--h) * .62); height: var(--h);
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, var(--pine-dark) 50%, var(--pine-lit) 50%);
+  clip-path: polygon(50% 0, 72% 28%, 62% 28%, 82% 56%, 66% 56%, 92% 84%, 54% 84%, 54% 100%, 46% 100%, 46% 84%, 8% 84%, 34% 56%, 18% 56%, 38% 28%, 28% 28%);
+  opacity: calc(1 - var(--d) * .25);
+}
+
+.stage {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2.2vh; padding: 0 5vw 6vh; box-sizing: border-box; text-align: center;
+}
+
+.plaque { position: relative; width: min(88vw, 620px); }
+.plaque img { display: block; width: 100%; height: auto; user-select: none; filter: drop-shadow(0 10px 0 rgba(40, 18, 8, .28)); }
+.plaque h1 {
+  position: absolute; inset: 0; margin: 0; display: flex; align-items: center; justify-content: center;
+  font-size: clamp(22px, 5.6vw, 52px); font-weight: 800; letter-spacing: .02em; color: #fff7ea;
+  text-shadow: 0 3px 0 rgba(64, 30, 12, .6);
+}
+
+/* ---------- the campfire (grows with the real load progress) ---------- */
+.fire-wrap {
+  --p: 0; width: 132px; height: 150px; transform-origin: 50% 100%;
+  transform: scale(calc(.42 + .58 * var(--p)));
+  transition: transform .35s ease-out;
+}
+.fire { position: relative; width: 100%; height: 100%; }
+.flame, .log, .stone { position: absolute; display: block; }
+.flame { left: 50%; bottom: 20px; transform-origin: 50% 100%; animation: flicker .7s steps(2, end) infinite alternate; }
+.flame.outer { width: 92px; height: 118px; margin-left: -46px; background: linear-gradient(90deg, #d8431c 50%, #ee5a22 50%);
+  clip-path: polygon(50% 0, 78% 36%, 94% 70%, 72% 100%, 28% 100%, 6% 70%, 24% 36%); }
+.flame.mid { width: 62px; height: 84px; margin-left: -31px; background: linear-gradient(90deg, #f58a2a 50%, #ff9f3a 50%); animation-delay: -.2s;
+  clip-path: polygon(50% 0, 80% 40%, 92% 72%, 70% 100%, 30% 100%, 8% 72%, 22% 40%); }
+.flame.core { width: 34px; height: 52px; margin-left: -17px; background: linear-gradient(90deg, #ffd45e 50%, #ffe78f 50%); animation-delay: -.4s;
+  clip-path: polygon(50% 0, 84% 44%, 90% 76%, 68% 100%, 32% 100%, 10% 76%, 16% 44%); }
+.log { left: 50%; bottom: 8px; width: 112px; height: 18px; margin-left: -56px; background: linear-gradient(180deg, #5e3920 50%, #46280f 50%);
+  clip-path: polygon(4% 0, 100% 10%, 96% 100%, 0 88%); }
+.log.l1 { transform: rotate(-9deg); }
+.log.l2 { transform: rotate(9deg) scaleX(-1); }
+.stone { bottom: 0; height: 24px; background: linear-gradient(90deg, #4c5566 50%, #667086 50%); clip-path: polygon(10% 100%, 0 52%, 34% 0, 74% 10%, 100% 60%, 88% 100%); }
+.stone.s1 { left: 0;  width: 40px; }
+.stone.s2 { left: 46px; width: 44px; height: 20px; }
+.stone.s3 { right: 0; width: 38px; }
+
+@keyframes flicker {
+  from { transform: scaleY(1) skewX(-2deg); }
+  to   { transform: scaleY(1.07) skewX(2deg); }
+}
+
+#status { margin: 0; font-size: clamp(16px, 2.4vw, 22px); font-weight: 700; color: #fff7ea; text-shadow: 0 2px 0 rgba(64, 30, 12, .55); }
+#percent { display: inline-block; min-width: 3ch; text-align: left; font-variant-numeric: tabular-nums; }
+#tip { margin: 0; max-width: 46ch; font-size: clamp(13px, 1.8vw, 16px); line-height: 1.45; color: #ffe9cf; text-shadow: 0 2px 0 rgba(64, 30, 12, .5); }
+
+#detail { margin: 0; max-width: 60ch; font-size: 12px; line-height: 1.4; color: #fff3df; opacity: .85; word-break: break-word; }
+#detail[hidden] { display: none; }
+#camp.unknown #percent { display: none; }
+#camp.unknown .fire-wrap { animation: breathe 1.6s ease-in-out infinite alternate; }
+@keyframes breathe { from { transform: scale(.6); } to { transform: scale(.68); } }
+
+#camp.failed .flame { animation: none; filter: grayscale(1) brightness(.55); }
+#camp.failed .fire-wrap { transform: scale(.7); }
+
+@media (prefers-reduced-motion: reduce) {
+  .flame, #camp.unknown .fire-wrap { animation: none; }
+  .fire-wrap, #camp { transition: none; }
+}
