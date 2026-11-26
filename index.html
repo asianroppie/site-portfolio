@@ -54,7 +54,12 @@
     (function () {
       var buildUrl = "Build";
 
-      // Very large canvases can run slowly in the browser. The game is drawn at most this many pixels wide
+      // Your intro camera is placed using the screen size in pixels, and it only lands in the right spot at 2560x1440
+      // (the size of your editor Game view). Rendering at that exact size, then scaling it to fit the window,
+      // makes the website match the editor. Set this to null to size the game to the window instead.
+      var FIXED_RENDER_SIZE = { width: 2560, height: 1440 };
+
+      // Very large canvases can run slowly in the browser. (Only used when FIXED_RENDER_SIZE is null.) The game is drawn at most this many pixels wide
       // and the browser scales it up to fill the window. Raise it for sharper visuals, lower it for speed.
       var MAX_RENDER_WIDTH = 1920;
       function renderScale() {
@@ -73,11 +78,13 @@
         companyName: "DefaultCompany",
         productName: "Website Portfolio",
         productVersion: "0.1.0",
-        devicePixelRatio: renderScale(),
+        matchWebGLToCanvasSize: !FIXED_RENDER_SIZE,
+        devicePixelRatio: FIXED_RENDER_SIZE ? 1 : renderScale(),
         showBanner: showBanner
       };
 
       var canvas = document.getElementById("unity-canvas");
+      if (FIXED_RENDER_SIZE) { canvas.width = FIXED_RENDER_SIZE.width; canvas.height = FIXED_RENDER_SIZE.height; }
 
       // Add #fps to the page address (for example .../site-portfolio/#fps) to show a frame-rate counter.
       if (location.hash === "#fps") {
