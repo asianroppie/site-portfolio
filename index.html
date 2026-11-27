@@ -7,7 +7,7 @@
   <title>Website Portfolio</title>
   <link rel="stylesheet" href="TemplateData/style.css">
 </head>
-<body class="letterbox">
+<body>
   <!-- The game fills the whole window. It loads underneath the camp screen and is revealed the moment it is ready. -->
   <canvas id="unity-canvas" tabindex="-1"></canvas>
 
@@ -54,10 +54,11 @@
     (function () {
       var buildUrl = "Build";
 
-      // Your intro camera is placed using the screen size in pixels, and it only lands in the right spot at 2560x1440
-      // (the size of your editor Game view). Rendering at that exact size, then scaling it to fit the window,
-      // makes the website match the editor. Set this to null to size the game to the window instead.
-      var FIXED_RENDER_SIZE = { width: 2560, height: 1440 };
+      // null = the game fills the whole browser window, with no black bars.
+      // To lock the game to one exact size and fit it inside the window instead (this adds black bars when the
+      // window is a different shape), use for example { width: 2560, height: 1440 } and add class="letterbox"
+      // to the <body> tag below.
+      var FIXED_RENDER_SIZE = null;
 
       // Very large canvases can run slowly in the browser. (Only used when FIXED_RENDER_SIZE is null.) The game is drawn at most this many pixels wide
       // and the browser scales it up to fill the window. Raise it for sharper visuals, lower it for speed.
